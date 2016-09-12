@@ -1,0 +1,129 @@
+<head>
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/font-awesome-4.6.3/css/font-awesome.css">
+</head>
+<body>
+  <div class="container">  
+    <div class="form-group">
+      <input type="text" class="form-control" id="inp">
+    </div>
+    <div class="btn btn-info submit">Submit</div>
+    <div class="canvaswrapper">
+      <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+    <div class="main"></div>
+  </div>
+</div>
+  <script src="js/jquery-2.1.4.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/Chart.js"></script>
+
+ <script src="/socket.io/socket.io.js"></script>
+  <script >
+$(document).ready(function(){
+
+  var dataStr=[];var labelStr=[];var range=10000;
+  var color=["#36A2EB","#6DD26E","#B24FD9","#45F5CE","#4CEF9E","#FB8B46","#6DD26E","#FFCE56","#FF0A62","#36A2EB","#FFCE56","#6DD26E","#FF0A62","#FF0A62","#B24FD9","#45F5CE","#4CEF9E","#FB8B46","#6DD26E","#FF0A62"];
+ $(".submit").on('click', function() {
+    console.log(dataStr);
+    var query=$("#inp").val();
+    getData(query);    
+  });
+
+ function getData(stockName){
+  $.get('https://www.quandl.com/api/v3/datasets.json?query='+stockName+'&database_code=BSE&per_page=1&page=1&api_key=FgaHXdYVHek_7zi_xaUx'
+, function(dbcode) {
+      if(!!dbcode.datasets["0"]){
+        console.log(dbcode);
+        getDetail(dbcode.datasets["0"].dataset_code);
+        socketio.emit('code add',dbcode.datasets["0"].dataset_code);
+      }
+      else{
+        console.log("error");
+      }
+    }); 
+ }
+
+ function getDetail(dbcode){
+  $.get('https://www.quandl.com/api/v3/datasets/BSE/'+dbcode+'.json?api_key=FgaHXdYVHek_7zi_xaUx', function(data) {
+      console.log(data);
+      $(".main").append('<div class="btn btn-default stocks" id="'+dbcode+'">'+data.dataset.name+' &nbsp;<i class="btn fa fa-times close" id="'+dbcode+'" ></i></div>');
+      dataStr[dbcode]=data.dataset.data;
+      labelStr[dbcode]=data.dataset.name;
+      console.log(dataStr);
+      console.log("sent");
+      if(data.dataset.data.length<range)
+        range=data.dataset.data.length;
+      chart();
+      $("#inp").val("");
+    });
+ }
+
+  $(".main").on('click', '.close', function(event) {
+    var id=$(this).attr('id');
+    remove(id);
+    socketio.emit('code remove',id);
+  });
+
+  function remove(id){
+    $("#"+id).remove();
+    delete dataStr[id];
+    delete labelStr[id];
+    console.log(dataStr);
+    chart();
+  }
+
+ function chart(){
+    $('#myChart').remove(); // this is my <canvas> element
+    var stepSize=10;
+    var colorCounter=0;
+    var sets=[];
+    $('.canvaswrapper').append('<canvas id="myChart"><canvas>');
+    var ctx = $("#myChart");
+    
+    for (var j in dataStr){ 
+    var labelArray=[];
+      var set=JSON.parse('{"label":"'+labelStr[j]+'","borderColor":"'+color[colorCounter]+'","data":[]}');
+      colorCounter++;
+      for (var i = stepSize; i <125*stepSize; i+=stepSize) {
+        labelArray.push(dataStr[j][i]["0"]);
+        set.data.push(dataStr[j][i]["4"]);
+      }
+      console.log(set);
+      sets.push(set);
+    }
+      
+      var d={
+        labels: labelArray,
+        datasets: sets
+      }
+      ctx.html("");
+      var myChart = new Chart(ctx, {
+          type: 'line',
+          data:d
+      });
+    
+ }
+
+  var socketio = io();
+  socketio.on('connection', function(socket){
+    console.log('a user connected');
+  });
+  socketio.on('add',function(code){
+    console.log('add'+code);
+    getDetail(code);
+  })
+  socketio.on('remove',function(code){
+    console.log('remove'+code);
+    remove(code);
+  })
+
+
+
+});
+</script>    
+</body>
+
+    
+
