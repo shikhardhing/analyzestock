@@ -5,6 +5,11 @@
 </head>
 <body>
   <div class="container">  
+    <div class="loader" style="display:none;">
+      <div class="loader-splash">
+        <span class="loader-text">Loading...</span>
+      </div>
+    </div>
     <div class="form-group">
       <input type="text" class="form-control" id="inp">
     </div>
@@ -29,6 +34,7 @@ $(document).ready(function(){
     console.log(dataStr);
     var query=$("#inp").val();
     getData(query);    
+    toggleLoadingScreen(true);
   });
 
  function getData(stockName){
@@ -41,6 +47,7 @@ $(document).ready(function(){
       }
       else{
         console.log("error");
+        toggleLoadingScreen(false);
       }
     }); 
  }
@@ -103,7 +110,13 @@ $(document).ready(function(){
           type: 'line',
           data:d
       });
-    
+      toggleLoadingScreen(false);
+ }
+
+ function toggleLoadingScreen(flag) {
+   var loader = document.querySelector('.loader'),
+     display = loader.style.display;
+   loader.style.display = flag ? 'block' : 'none';
  }
 
   var socketio = io();

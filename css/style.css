@@ -29,3 +29,28 @@ a.twitter-btn{
   background-color:rgba(0,132,180,0.8);
   color:white;
 }
+
+.loader {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	z-index: 999;
+	background-color: #000;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+.loader-splash {
+	position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+	width: 100%;
+	display: block;
+	text-align: center;
+}
+
+.loader-text {
+	color: #fff;
+	font-size: 2em;
+}
